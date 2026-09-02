@@ -1,4 +1,4 @@
-<img width="1536" height="713" alt="Screenshot_2026-09-02_08_58_00" src="https://github.com/user-attachments/assets/8c8c102e-e771-484e-9bee-2dfaededc228" /># Cybersecurity Penetration Testing Lab for Kioptrix 1 and Metasploitable 2
+Penetration Testing Lab for Kioptrix 1 and Metasploitable 2
 
 A full penetration testing exercise against two classic intentionally-vulnerable VMs — Kioptrix: Level 1 and Metasploitable 2 — covering the complete attack chain: reconnaissance, enumeration, exploitation, gaining root access, and post-exploitation.
 

